@@ -1,0 +1,48 @@
+#include "Particle.h"
+#include <BeaconScanner.h>
+#include <string>
+
+SYSTEM_THREAD(ENABLED);
+
+SerialLogHandler logHandler;
+Beaconscanner scanner;
+char* uuid = "FDA50693-A4E2-4FB1-AFCF-C6EB07647825";
+Servo myservo;
+
+void setup() {
+    myservo.attach(D2);   // attach the servo on the D0 pin to the servo object
+    myservo.write(25);    // test the servo by moving it to 25°
+    pinMode(D7, OUTPUT);
+}
+
+unsigned long scannedTime = 0;
+
+void loop() {
+    if (Particle.connected() && (millis() - scannedTime) > 1000) {
+        scannedTime = millis();
+        
+        scanner.scan(1, SCAN_IBEACON);
+        Vector<iBeaconScan> beacons = scanner.getiBeacons();
+        
+        while(!beacons.isEmpty())
+        {
+          //should iterate through beacons in vector
+          iBeaconScan beacon = beacons.takeFirst();//choose first beacon in vector
+          //if (beacon.getAddress().toString().c_str() == "EE:4A:FE:57:AC:CA"){ //identify via the address instead of the UUID
+          if (beacon.getUuid() == uuid){      
+              if (beacon.getRssi() <= -60){
+                  //if (locksetting == unlock){
+                    myservo.write(90);//unlock door
+                    //}
+                  //if (locksetting == lockedfrominside){
+                    myservo.write(-90);//unlock exterior lock
+                  }
+              }
+              //if (beacon.getRssi() >= -60 and hall effect sensor >= amount){
+                //myservo.write(0); //lock door
+                //}
+              }
+          }
+        }
+    }
+}
