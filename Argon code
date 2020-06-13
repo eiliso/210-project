@@ -1,6 +1,5 @@
 #include "Particle.h"
 #include <BeaconScanner.h>
-#include <string>
 
 SYSTEM_THREAD(ENABLED);
 
@@ -13,9 +12,41 @@ void setup() {
     myservo.attach(D2);   // attach the servo on the D0 pin to the servo object
     myservo.write(25);    // test the servo by moving it to 25°
     pinMode(D7, OUTPUT);
+    
+    Particle.function("lock", lock);
+    Particle.function("unlock", unlock);
+    Particle.function("outdooronly", outdooronly); //only lock the outside
 }
 
 unsigned long scannedTime = 0;
+
+int locksetting = 1;
+int unlocksetting = 0;
+int outdooronlysetting = 0;
+
+int lock(String command)
+{
+    locksetting = 1;
+    unlocksetting = 0;
+    outdooronlysetting = 0;
+    return 0;
+}
+
+int unlock(String command)
+{
+    locksetting = 0;
+    unlocksetting = 1;
+    outdooronlysetting = 0;   
+    return 1;
+}
+
+int outdooronly(String command)
+{
+    locksetting = 0;
+    unlocksetting = 0;
+    outdooronlysetting = 1;  
+    return 2;
+}
 
 void loop() {
     if (Particle.connected() && (millis() - scannedTime) > 1000) {
@@ -31,18 +62,17 @@ void loop() {
           //if (beacon.getAddress().toString().c_str() == "EE:4A:FE:57:AC:CA"){ //identify via the address instead of the UUID
           if (beacon.getUuid() == uuid){      
               if (beacon.getRssi() <= -60){
-                  //if (locksetting == unlock){
+                  //if (unlocksetting == 1){
                     myservo.write(90);//unlock door
                     //}
-                  //if (locksetting == lockedfrominside){
+                  //if (outdooronlysetting == 1){
                     myservo.write(-90);//unlock exterior lock
-                  }
-              }
-              //if (beacon.getRssi() >= -60 and hall effect sensor >= amount){
+                  //}
+                }
+              //if (beacon.getRssi() >= -60 and hall effect sensor >= amount and locketting == 1){
                 //myservo.write(0); //lock door
                 //}
               }
-          }
         }
     }
 }
