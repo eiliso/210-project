@@ -10,7 +10,6 @@ Servo myservo;
 
 void setup() {
     myservo.attach(D2);   // attach the servo on the D0 pin to the servo object
-    myservo.write(25);    // test the servo by moving it to 25°
     pinMode(D7, OUTPUT);
     
     Particle.function("lock", lock);
